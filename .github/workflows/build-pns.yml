@@ -41,11 +41,11 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir -p out
-          find build/linux -name "_pcbnew.so*" -exec cp {} out/ \;
-          find build/linux -name "pcbnew.py" -exec cp {} out/ \;
-          find build/linux -name "kicad-cli" -type f -exec cp {} out/ \;
-          find build/linux -name "pcbnew.kiface" -o -name "kicad-cli" -type f | xargs -I{} cp {} out/ 2>/dev/null || true
-          ls build/linux/pcbnew/ | head -20
+          echo "=== candidate files ==="
+          find build -type f \( -name "kicad-cli" -o -name "*.kiface" -o -name "_pcbnew*" -o -name "pcbnew.py" \) 2>/dev/null | head -20
+          find build -type f -name "kicad-cli" -exec cp {} out/ \; 2>/dev/null || true
+          find build -type f -name "*.kiface" -exec cp {} out/ \; 2>/dev/null || true
+          find build -type f -name "_pcbnew*" -exec cp {} out/ \; 2>/dev/null || true
           ls -la out/
 
       - uses: actions/upload-artifact@v4
