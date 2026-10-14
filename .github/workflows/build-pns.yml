@@ -36,7 +36,7 @@ jobs:
       - name: Build pcbnew
         run: |
           cd build/linux
-          ninja -j$(nproc) pcbnew kicad-cli 2>&1 | tail -80
+          ninja -j$(nproc) pcbnew_kiface kicad-cli 2>&1 | tail -80
 
       - name: Collect artifacts
         run: |
@@ -44,7 +44,8 @@ jobs:
           find build/linux -name "_pcbnew.so*" -exec cp {} out/ \;
           find build/linux -name "pcbnew.py" -exec cp {} out/ \;
           find build/linux -name "kicad-cli" -type f -exec cp {} out/ \;
-          find build/linux -name "*kiface*" -exec cp {} out/ \;
+          find build/linux -name "pcbnew.kiface" -o -name "kicad-cli" -type f | xargs -I{} cp {} out/ 2>/dev/null || true
+          ls build/linux/pcbnew/ | head -20
           ls -la out/
 
       - uses: actions/upload-artifact@v4
