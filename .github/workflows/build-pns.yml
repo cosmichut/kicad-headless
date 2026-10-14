@@ -36,7 +36,8 @@ jobs:
       - name: Build pcbnew
         run: |
           cd build/linux
-          ninja -j$(nproc) pcbnew_kiface kicad-cli 2>&1 | tail -80
+          set -o pipefail
+          ninja -j$(nproc) pcbnew_kiface kicad-cli 2>&1 | tail -60
 
       - name: Collect artifacts
         run: |
