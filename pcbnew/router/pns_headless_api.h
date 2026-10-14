@@ -34,7 +34,9 @@ namespace PNS
 class ROUTER;
 class ROUTER_IFACE;
 class ITEM;
+namespace PNS {
 class ROUTING_SETTINGS;
+}
 }
 
 class PNS_HEADLESS_IFACE;
@@ -124,7 +126,7 @@ private:
     BOARD*               m_board = nullptr;
     PNS::ROUTER*         m_router = nullptr;
     PNS_HEADLESS_IFACE*  m_iface = nullptr;
-    std::unique_ptr<ROUTING_SETTINGS> m_settings;
+    std::unique_ptr<PNS::ROUTING_SETTINGS> m_settings;
 
     bool m_allowDrcViolations = false;
     bool m_allowPartial = false;

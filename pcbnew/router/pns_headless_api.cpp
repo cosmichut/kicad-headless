@@ -83,7 +83,7 @@ bool PNS_BRIDGE::Attach( BOARD* aBoard )
     m_board = aBoard;
 
     // Force shove mode: the whole point of this API is push-and-shove.
-    m_settings = std::make_unique<ROUTING_SETTINGS>( nullptr, "tools.pns_headless" );
+    m_settings = std::make_unique<PNS::ROUTING_SETTINGS>( nullptr, "tools.pns_headless" );
     m_settings->SetMode( PNS::RM_Shove );
     m_settings->SetAllowDRCViolations( m_allowDrcViolations );
 
