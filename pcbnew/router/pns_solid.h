@@ -28,6 +28,8 @@
 #include <geometry/shape.h>
 #include <geometry/shape_line_chain.h>
 
+#include "pns_hole.h"
+
 #include "pns_item.h"
 #include "pns_hole.h"
 
