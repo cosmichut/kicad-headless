@@ -44,6 +44,7 @@ jobs:
           find build/linux -name "_pcbnew.so*" -exec cp {} out/ \;
           find build/linux -name "pcbnew.py" -exec cp {} out/ \;
           find build/linux -name "kicad-cli" -type f -exec cp {} out/ \;
+          find build/linux -name "*kiface*" -exec cp {} out/ \;
           ls -la out/
 
       - uses: actions/upload-artifact@v4
