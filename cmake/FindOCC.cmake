@@ -118,9 +118,14 @@ if(WIN32)
     )
   else()
     FIND_PATH(OCC_INCLUDE_DIR Standard_Version.hxx
+      /usr/include/opencascade
+      /usr/local/include/opencascade
       "[HKEY_LOCAL_MACHINE\\SOFTWARE\\SIM\\OCC\\2;Installation Path]/include"
     )
     FIND_LIBRARY(OCC_LIBRARY TKernel
+      /usr/lib/x86_64-linux-gnu
+      /usr/lib
+      /usr/local/lib
       "[HKEY_LOCAL_MACHINE\\SOFTWARE\\SIM\\OCC\\2;Installation Path]/lib"
     )
   endif()
