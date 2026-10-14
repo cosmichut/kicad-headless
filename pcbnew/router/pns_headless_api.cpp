@@ -33,6 +33,7 @@
 #include "pns_placement_algo.h"
 #include "pns_router.h"
 #include "pns_segment.h"
+#include "pns_arc.h"
 #include "pns_solid.h"
 #include "pns_sizes_settings.h"
 #include "pns_via.h"
