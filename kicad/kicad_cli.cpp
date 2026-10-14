@@ -52,6 +52,7 @@
 #include "cli/command_jobset_run.h"
 #include "cli/command_pcb.h"
 #include "cli/command_pcb_export.h"
+#include "cli/pcb_route_command.h"
 #include "cli/command_export_bom.h"
 #include "cli/command_fp_diff.h"
 #include "cli/command_pcb_diff.h"
@@ -150,6 +151,7 @@ static CLI::JOBSET_RUN_COMMAND           jobsetRunCmd{};
 static CLI::PCB_COMMAND                  pcbCmd{};
 static CLI::PCB_DIFF_COMMAND             pcbDiffCmd{};
 static CLI::PCB_DRC_COMMAND              pcbDrcCmd{};
+static CLI::PCB_ROUTE_COMMAND            pcbRouteCmd{};
 static CLI::MERGETOOL_COMMAND            mergetoolCmd{};
 static CLI::GIT_MERGEDRIVER_COMMAND      gitMergeDriverCmd{};
 static CLI::PCB_RENDER_COMMAND           pcbRenderCmd{};
@@ -272,6 +274,9 @@ static std::vector<COMMAND_ENTRY> commandStack = {
             },
             {
                 &pcbDrcCmd
+            },
+            {
+                &pcbRouteCmd
             },
             {
                 &pcbImportCmd
@@ -485,6 +490,28 @@ static bool looksLikeNegativeVectorValue( const std::string& aValue )
 
 
 /**
+ * Check if a string is a plain negative scalar number, e.g. "-3.5".  Used for
+ * coordinate-style options (kicad-cli pcb route --from-x, ...) that take a
+ * single number rather than a comma-separated vector.
+ */
+static bool looksLikeNegativeNumber( const std::string& aValue )
+{
+    if( aValue.size() < 2 || aValue[0] != '-' )
+        return false;
+
+    for( size_t i = 1; i < aValue.size(); ++i )
+    {
+        char c = aValue[i];
+
+        if( !std::isdigit( c ) && c != '.' )
+            return false;
+    }
+
+    return true;
+}
+
+
+/**
  * Pre-process command line arguments to handle negative numeric values.
  *
  * The argparse library interprets values starting with '-' as option flags.
@@ -499,7 +526,9 @@ static std::vector<std::string> preprocessArgs( int argc, char** argv )
 {
     std::vector<std::string> result;
 
-    static const std::set<std::string> vectorArgs = { "--rotate", "--pan", "--pivot" };
+    static const std::set<std::string> vectorArgs = { "--rotate", "--pan", "--pivot",
+                                                      "--waypoints" };
+    static const std::set<std::string> scalarArgs = { "--from-x", "--from-y", "--to-x", "--to-y" };
 
     for( int i = 0; i < argc; ++i )
     {
@@ -510,6 +539,18 @@ static std::vector<std::string> preprocessArgs( int argc, char** argv )
             std::string next( argv[i + 1] );
 
             if( looksLikeNegativeVectorValue( next ) )
+            {
+                result.push_back( current + "='" + next + "'" );
+                ++i;
+                continue;
+            }
+        }
+
+        if( scalarArgs.count( current ) && i + 1 < argc )
+        {
+            std::string next( argv[i + 1] );
+
+            if( looksLikeNegativeNumber( next ) )
             {
                 result.push_back( current + "='" + next + "'" );
                 ++i;

@@ -442,6 +442,11 @@ PCBNEW_JOBS_HANDLER::PCBNEW_JOBS_HANDLER( KIWAY* aKiway ) :
                   DIALOG_DRC_JOB_CONFIG dlg( aParent, drcJob );
                   return dlg.ShowModal() == wxID_OK;
               } );
+    Register( "route", std::bind( &PCBNEW_JOBS_HANDLER::JobRoute, this, std::placeholders::_1 ),
+              []( JOB* job, wxWindow* aParent ) -> bool
+              {
+                  return true;
+              } );
     Register( "ipc2581", std::bind( &PCBNEW_JOBS_HANDLER::JobExportIpc2581, this, std::placeholders::_1 ),
               [aKiway]( JOB* job, wxWindow* aParent ) -> bool
               {

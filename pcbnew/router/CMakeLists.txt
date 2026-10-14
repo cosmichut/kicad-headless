@@ -22,6 +22,7 @@ include_directories(
 set( PCBNEW_PNS_SRCS
     time_limit.cpp
     pns_kicad_iface.cpp
+    pns_headless_api.cpp
     pns_algo_base.cpp
     pns_arc.cpp
     pns_block_dragger.cpp

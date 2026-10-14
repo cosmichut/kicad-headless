@@ -36,7 +36,7 @@ jobs:
       - name: Build pcbnew
         run: |
           cd build/linux
-          ninja -j$(nproc) pcbnew 2>&1 | tail -80
+          ninja -j$(nproc) pcbnew kicad-cli 2>&1 | tail -80
 
       - name: Collect artifacts
         run: |
@@ -89,7 +89,7 @@ jobs:
         shell: pwsh
         run: |
           cd build\windows
-          cmake --build . --target pcbnew 2>&1 | Select-Object -Last 80
+          cmake --build . --target pcbnew kicad-cli 2>&1 | Select-Object -Last 80
 
       - name: Collect artifacts
         shell: pwsh

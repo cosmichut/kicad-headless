@@ -204,6 +204,7 @@ set( KICOMMON_SRCS
     jobs/job_sym_upgrade.cpp
     jobs/job_pcb_upgrade.cpp
     jobs/job_pcb_downgrade.cpp
+    jobs/job_pcb_route.cpp
     jobs/job_sch_upgrade.cpp
     jobs/job_sch_downgrade.cpp
 

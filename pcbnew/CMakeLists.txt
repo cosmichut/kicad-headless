@@ -477,6 +477,7 @@ set( PCBNEW_CLASS_SRCS
     pcb_plotter.cpp
     pcbnew_config.cpp
     pcbnew_jobs_handler.cpp
+    job_pcb_route.cpp
     pcbnew_printout.cpp
     pcbnew_settings.cpp
     pcbplot.cpp

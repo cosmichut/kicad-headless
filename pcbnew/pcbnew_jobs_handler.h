@@ -71,6 +71,7 @@ public:
     int JobImport( JOB* aJob );
     int JobDiff( JOB* aJob );
     int JobFpDiff( JOB* aJob );
+    int JobRoute( JOB* aJob );
 
     /// Non-job entry points (reached via the kiface KIFACE_MERGE_DOCUMENT /
     /// KIFACE_OPEN_DIFF_DIALOG function exports, not the JOB system).
