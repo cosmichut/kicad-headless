@@ -27,6 +27,7 @@
 #include "pns_item.h"
 #include "pns_itemset.h"
 #include "pns_kicad_iface.h"
+#include "pns_routing_settings.h"
 #include "pns_line.h"
 #include "pns_node.h"
 #include "pns_placement_algo.h"
@@ -297,7 +298,7 @@ bool PNS_BRIDGE::RouteNet( const wxString& aNetName,
 PNS::ITEM* PNS_BRIDGE::findItemNear( PNS::NET_HANDLE aNet, const VECTOR2I& aWhere,
                                      int aPnsLayer, int aSlopRadius )
 {
-    ITEM_SET candidates = m_router->QueryHoverItems( aWhere, aSlopRadius );
+    PNS::ITEM_SET candidates = m_router->QueryHoverItems( aWhere, aSlopRadius );
 
     PNS::ITEM* best = nullptr;
     long long  bestScore = std::numeric_limits<long long>::max();

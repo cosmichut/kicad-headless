@@ -34,6 +34,7 @@ namespace PNS
 class ROUTER;
 class ROUTER_IFACE;
 class ITEM;
+class ROUTING_SETTINGS;
 }
 
 class PNS_HEADLESS_IFACE;
