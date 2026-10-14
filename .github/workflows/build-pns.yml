@@ -51,3 +51,55 @@ jobs:
           name: pcbnew-pns-headless
           path: out/
           retention-days: 14
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tools
+        run: choco install swig ninja -y --no-progress
+
+      - name: Restore vcpkg cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            build/windows/vcpkg_installed
+            .vcpkgCache
+          key: vcpkg-win-${{ github.sha }}
+          restore-keys: vcpkg-win-
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          $env:VCPKG_DEFAULT_BINARY_CACHE = "$env:GITHUB_WORKSPACE\.vcpkgCache"
+          New-Item -ItemType Directory -Force -Path $env:VCPKG_DEFAULT_BINARY_CACHE, build\windows
+          cd build\windows
+          cmake -G Ninja `
+            -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake" `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DKICAD_USE_OCC=OFF `
+            -DKICAD_BUILD_PNS_DEBUG_TOOL=ON `
+            -DVCPKG_OVERLAY_TRIPLETS="$env:GITHUB_WORKSPACE\tools\custom_vcpkg_triplets" `
+            -DVCPKG_TARGET_TRIPLET="x64-windows" `
+            -DKICAD_USE_PCH=OFF `
+            ../../
+
+      - name: Build pcbnew
+        shell: pwsh
+        run: |
+          cd build\windows
+          cmake --build . --target pcbnew 2>&1 | Select-Object -Last 80
+
+      - name: Collect artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path out
+          Get-ChildItem -Recurse build\windows -Include "_pcbnew.pyd","pcbnew.py","kicad-cli.exe" -ErrorAction SilentlyContinue | Copy-Item -Destination out
+          Get-ChildItem out
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pcbnew-pns-windows
+          path: out/
+          retention-days: 14
