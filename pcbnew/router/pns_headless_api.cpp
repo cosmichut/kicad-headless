@@ -34,6 +34,7 @@
 #include "pns_router.h"
 #include "pns_segment.h"
 #include "pns_arc.h"
+#include "pns_line.h"
 #include "pns_hole.h"
 #include "pns_solid.h"
 #include "pns_sizes_settings.h"
