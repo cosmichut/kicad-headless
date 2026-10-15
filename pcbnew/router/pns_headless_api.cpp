@@ -272,6 +272,110 @@ bool PNS_BRIDGE::Route( NETINFO_ITEM* aNet,
 }
 
 
+bool PNS_BRIDGE::RouteChain( NETINFO_ITEM* aNet,
+                             const std::vector<std::pair<VECTOR2I, PCB_LAYER_ID>>& aPoints,
+                             std::vector<BOARD_CONNECTED_ITEM*>* aOutItems )
+{
+    m_lastError = wxEmptyString;
+
+    if( !m_router || !m_iface )
+    {
+        m_lastError = wxT( "RouteChain: not attached to a board" );
+        return false;
+    }
+
+    if( aPoints.size() < 2 )
+    {
+        m_lastError = wxT( "RouteChain: at least two points are required" );
+        return false;
+    }
+
+    // Validate every point's layer up front: a malformed chain fails before
+    // anything is committed.
+    for( const std::pair<VECTOR2I, PCB_LAYER_ID>& pt : aPoints )
+    {
+        if( !::IsCopperLayer( pt.second ) )
+        {
+            m_lastError = wxT( "RouteChain: non-copper layer" );
+            return false;
+        }
+
+        if( m_iface->GetPNSLayerFromBoardLayer( pt.second ) < 0 )
+        {
+            m_lastError = wxT( "RouteChain: layer outside the board's copper stack" );
+            return false;
+        }
+    }
+
+    // An unspecified net is inferred from the netted copper item nearest the
+    // chain start (the same lookup routeLeg() uses to seed the placer).
+    if( !aNet )
+    {
+        const int      pnsLayer     = m_iface->GetPNSLayerFromBoardLayer( aPoints[0].second );
+        const VECTOR2I startClamped = clampCoord( aPoints[0].first );
+        PNS::ITEM*     seed         = findItemNear( nullptr, startClamped, pnsLayer, m_searchRadius );
+
+        if( !seed )
+            seed = findItemNear( nullptr, startClamped, pnsLayer, m_searchRadius * 3 );
+
+        if( !seed || !seed->Net() )
+        {
+            m_lastError = wxT( "RouteChain: no net given and no netted copper item found "
+                               "near the start point" );
+            return false;
+        }
+
+        aNet = static_cast<NETINFO_ITEM*>( seed->Net() );
+    }
+
+    if( m_router->RoutingInProgress() )
+        m_router->StopRouting();
+
+    std::vector<BOARD_CONNECTED_ITEM*> created;
+    m_iface->SetCaptureList( &created );
+
+    bool ok = true;
+
+    for( size_t i = 0; i + 1 < aPoints.size(); ++i )
+    {
+        // A layer change between neighbours drops a via at the leg end
+        // (aViaAtEnd toggles via placement before the final Move, mirroring
+        // the GUI 'V' key), so the next leg starts on the new layer.  Keep
+        // same-position neighbours on different layers: routeLeg() then
+        // commits a via-only leg there.
+        const bool needVia = ( aPoints[i].second != aPoints[i + 1].second );
+
+        if( aPoints[i].first == aPoints[i + 1].first && !needVia )
+            continue;   // zero-length leg
+
+        if( !routeLeg( aNet, clampCoord( aPoints[i].first ), clampCoord( aPoints[i + 1].first ),
+                       aPoints[i].second, needVia ) )
+        {
+            ok = false;
+            break;
+        }
+    }
+
+    m_iface->SetCaptureList( nullptr );
+
+    if( !ok )
+    {
+        // routeLeg() stops routing on every failure path; this is a belt and
+        // braces.  Legs already committed stay on the BOARD: like Route(),
+        // there is no automatic rollback, the caller owns undoing partial
+        // results.
+        if( m_router->RoutingInProgress() )
+            m_router->StopRouting();
+    }
+    else if( aOutItems )
+    {
+        *aOutItems = created;
+    }
+
+    return ok;
+}
+
+
 bool PNS_BRIDGE::RouteNet( const wxString& aNetName,
                            const VECTOR2I& aFrom, const VECTOR2I& aTo,
                            PCB_LAYER_ID aLayer,

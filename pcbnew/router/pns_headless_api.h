@@ -15,6 +15,7 @@
 #ifndef PNS_HEADLESS_API_H
 #define PNS_HEADLESS_API_H
 
+#include <utility>
 #include <vector>
 #include <memory>
 
@@ -91,6 +92,33 @@ public:
                 const std::vector<VECTOR2I>& aWaypoints,
                 bool aAllowVia,
                 std::vector<BOARD_CONNECTED_ITEM*>* aOutItems = nullptr );
+
+    /**
+     * Route a chain of legs connecting aPoints in order: aPoints[0] is the
+     * start, the last point is the end.  When two consecutive points sit on
+     * different copper layers, a via is deposited at aPoints[i] (the end of
+     * leg i) so that leg i+1 starts on the new layer.
+     *
+     * @param aNet net to route.  May be null, in which case the net is
+     *             inferred from the netted copper item nearest aPoints[0]
+     *             (fails if there is none).
+     * @param aPoints ordered (position, layer) chain vertices in board
+     *                internal units; at least two points are required.  Two
+     *                same-position neighbours on different layers commit a
+     *                via-only leg (a stacked via at that point).
+     * @param aOutItems optional; receives the BOARD_CONNECTED_ITEMs created
+     *                  by this call (already added to the BOARD).
+     *
+     * @return true when every leg was committed to the BOARD.  On the first
+     *         failing leg routing is stopped and false is returned; the legs
+     *         already committed stay on the BOARD - as with Route() there is
+     *         no automatic rollback, the caller owns undoing partial results.
+     *         (Note that with SetAllowPartialRoute() enabled a leg may commit
+     *         short of its end point, leaving a gap before the next leg.)
+     */
+    bool RouteChain( NETINFO_ITEM* aNet,
+                     const std::vector<std::pair<VECTOR2I, PCB_LAYER_ID>>& aPoints,
+                     std::vector<BOARD_CONNECTED_ITEM*>* aOutItems = nullptr );
 
     /// best-effort helper for scripting layers
     bool RouteNet( const wxString& aNetName,

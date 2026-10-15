@@ -32,6 +32,7 @@
 #define ARG_LAYER "--layer"
 #define ARG_WAYPOINTS "--waypoints"
 #define ARG_ALLOW_VIA "--allow-via"
+#define ARG_CHAIN "--chain"
 
 // Coordinates arrive as strings so that negative values wrapped in single
 // quotes by kicad_cli.cpp's preprocessArgs survive the scan-free parse.
@@ -59,25 +60,27 @@ CLI::PCB_ROUTE_COMMAND::PCB_ROUTE_COMMAND() : COMMAND( "route" )
             .metavar( "NET_NAME" );
 
     m_argParser.add_argument( ARG_FROM_X )
-            .required()
+            .default_value( std::string( "0" ) )
             .help( UTF8STDSTR( _( "Start point X in mm (use --from-x=-1.5 for negative "
-                                  "values)" ) ) )
+                                  "values); required unless --chain is given" ) ) )
             .metavar( "MM" );
 
     m_argParser.add_argument( ARG_FROM_Y )
-            .required()
+            .default_value( std::string( "0" ) )
             .help( UTF8STDSTR( _( "Start point Y in mm (use --from-y=-1.5 for negative "
-                                  "values)" ) ) )
+                                  "values); required unless --chain is given" ) ) )
             .metavar( "MM" );
 
     m_argParser.add_argument( ARG_TO_X )
-            .required()
-            .help( UTF8STDSTR( _( "End point X in mm (use --to-x=-1.5 for negative values)" ) ) )
+            .default_value( std::string( "0" ) )
+            .help( UTF8STDSTR( _( "End point X in mm (use --to-x=-1.5 for negative values); "
+                                  "required unless --chain is given" ) ) )
             .metavar( "MM" );
 
     m_argParser.add_argument( ARG_TO_Y )
-            .required()
-            .help( UTF8STDSTR( _( "End point Y in mm (use --to-y=-1.5 for negative values)" ) ) )
+            .default_value( std::string( "0" ) )
+            .help( UTF8STDSTR( _( "End point Y in mm (use --to-y=-1.5 for negative values); "
+                                  "required unless --chain is given" ) ) )
             .metavar( "MM" );
 
     m_argParser.add_argument( ARG_LAYER )
@@ -94,6 +97,12 @@ CLI::PCB_ROUTE_COMMAND::PCB_ROUTE_COMMAND() : COMMAND( "route" )
             .help( UTF8STDSTR( _( "Allow the router to insert vias (reserved; the route stays "
                                   "on a single layer in this version)" ) ) )
             .flag();
+
+    m_argParser.add_argument( ARG_CHAIN )
+            .default_value( std::string( "" ) )
+            .help( UTF8STDSTR( _( "Multi-leg chain: x,y,LAYER;x,y,LAYER;... (layer changes "
+                                  "drop vias)" ) ) )
+            .metavar( "CHAIN_PARAMS" );
 }
 
 
@@ -115,6 +124,32 @@ int CLI::PCB_ROUTE_COMMAND::doPerform( KIWAY& aKiway )
     }
 
     routeJob->m_allowVia = m_argParser.get<bool>( ARG_ALLOW_VIA );
+
+    const bool chainGiven = m_argParser.is_used( ARG_CHAIN );
+    const bool endpointsGiven = m_argParser.is_used( ARG_FROM_X ) || m_argParser.is_used( ARG_FROM_Y )
+                                || m_argParser.is_used( ARG_TO_X ) || m_argParser.is_used( ARG_TO_Y );
+
+    if( chainGiven && endpointsGiven )
+    {
+        wxFprintf( stderr, _( "--chain and --from-x/--from-y/--to-x/--to-y are mutually "
+                              "exclusive\n" ) );
+        return EXIT_CODES::ERR_ARGS;
+    }
+
+    if( !chainGiven && !endpointsGiven )
+    {
+        wxFprintf( stderr, _( "Either --chain or --from-x/--from-y/--to-x/--to-y is required\n" ) );
+        return EXIT_CODES::ERR_ARGS;
+    }
+
+    if( chainGiven )
+    {
+        routeJob->m_chain = From_UTF8( m_argParser.get<std::string>( ARG_CHAIN ).c_str() );
+
+        // Strip the single quotes preprocessArgs (kicad_cli.cpp) wraps negative
+        // coordinate values in.
+        routeJob->m_chain.Replace( wxT( "'" ), wxT( "" ) );
+    }
 
     wxString waypoints = From_UTF8( m_argParser.get<std::string>( ARG_WAYPOINTS ).c_str() );
 

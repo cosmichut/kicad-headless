@@ -51,6 +51,12 @@ public:
     /// Intermediate points, in mm, all on m_layer.
     std::vector<VECTOR2D> m_waypoints;
 
+    /// Multi-leg chain, "x1,y1,LAYER1;x2,y2,LAYER2;..." (mm; layer names as
+    /// for m_layer).  When non-empty it replaces the m_fromX/m_fromY/m_toX/
+    /// m_toY endpoints, m_layer and m_waypoints; a layer change between
+    /// consecutive points drops a via at that point.
+    wxString m_chain;
+
     /// Reserved: allow the router to change layers (via insertion) in future
     /// multi-layer revisions of the route entry point.
     bool m_allowVia;
