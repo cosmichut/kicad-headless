@@ -369,12 +369,15 @@ bool PNS_BRIDGE::routeLeg( PNS::NET_HANDLE aNet, const VECTOR2I& aFrom, const VE
 
     // 1. Find a same-net item near the leg start; the router needs it to pick
     //    up the net, inherited widths and posture (LINE_PLACER::Start).
+    //    An isolated pad (no same-net copper within reach) is still routable:
+    //    fall back to a null seed — the router then starts from the bare point
+    //    and picks up the net from aNet instead of from the item.
     PNS::ITEM* startItem = findItemNear( aNet, aFrom, pnsLayer, m_searchRadius );
 
     if( !startItem )
         startItem = findItemNear( aNet, aFrom, pnsLayer, m_searchRadius * 3 );
 
-    if( !startItem )
+    if( !startItem && !aNet )
     {
         m_lastError = wxT( "no item of the requested net found near the start point" );
         return false;
